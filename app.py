@@ -10,28 +10,31 @@ import pandas as pd
 import os
 
 # --- PAGE CONFIG ---
-# Removed CSS background overrides to allow native Streamlit theme handling
-st.set_page_config(page_title="Aerial Object Detection", layout="wide")
+st.set_page_config(
+    page_title="SkyGuard: Aerial Intelligence", 
+    page_icon="🛡️", 
+    layout="wide"
+)
 
-# --- CLEAN UI ELEMENTS ---
+# --- CUSTOM CSS FOR CLEAN UI ---
 st.markdown("""
     <style>
-    /* Hide unnecessary Streamlit menus for a cleaner production look */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    
-    /* Subtle styling for metric cards */
-    [data-testid="stMetricValue"] {
-        font-weight: 700;
+    .stMetric {
+        background-color: rgba(28, 131, 225, 0.1);
+        padding: 15px;
+        border-radius: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- MODEL LOADING ---
+# --- MODEL LOADING (CACHED) ---
 @st.cache_resource
 def load_all_models():
     try:
+        # Loading your AI models
         cnn = load_model('best_model_custom_cnn.keras')
         transfer = load_model('best_model_transfer_learning.keras')
         yolo_m = YOLO('best.pt')
@@ -43,106 +46,119 @@ cnn, transfer, yolo = load_all_models()
 
 # --- SIDEBAR CONTROL PANEL ---
 with st.sidebar:
-    st.title("⚙️ Control Panel")
+    st.title("🛡️ SkyGuard Ops")
     st.write("---")
     
-    # System Status
+    # System Connectivity Status
     if cnn and yolo:
-        st.success("AI Core: Connected")
+        st.success("AI Core: Online")
     else:
         st.error("AI Core: Offline")
     
-    st.markdown("### 📥 Data Source")
-    input_choice = st.radio("Choose Input Type:", ["Upload Image", "🎯 Labmentix Samples"])
+    st.markdown("### 📥 Input Selection")
+    input_choice = st.radio("Source:", ["Manual Upload", "Labmentix Samples"])
     
     st.write("---")
-    st.info("System optimized for real-time aerial surveillance analysis.")
+    st.markdown("### 🎯 Detection Sensitivity")
+    # This fixes your "False Bird" problem. 
+    # Slide it to 0.7 or higher for landscape photos.
+    conf_threshold = st.slider("Min Confidence %", 0.0, 1.0, 0.5, help="Increase this to remove false detections in busy backgrounds.")
+    
+    st.write("---")
+    st.caption("Developed by Bharda Dharmishtha | AI/ML Intern")
 
-# --- MAIN PAGE HEADER ---
-st.title("🛡️ Aerial Object Detection")
-st.caption("Advanced AI Ensemble for Sky Surveillance")
+# --- MAIN INTERFACE ---
+st.title("🛡️ SkyGuard: Aerial Intelligence")
+st.markdown("##### Enterprise-Grade Drone & Bird Monitoring System")
 st.write("---")
 
-# --- DATA INPUT LOGIC ---
+# --- DATA HANDLING ---
 img = None
 
-if input_choice == "Upload Image":
-    uploaded_file = st.file_uploader("Drag and drop a surveillance frame", type=["jpg", "png", "jpeg"])
+if input_choice == "Manual Upload":
+    uploaded_file = st.file_uploader("Drop surveillance frame here...", type=["jpg", "png", "jpeg"])
     if uploaded_file:
         img = Image.open(uploaded_file)
 else:
-    # Handle Sample Folder
-    sample_dir = "samples"
-    if os.path.exists(sample_dir):
-        sample_files = [f for f in os.listdir(sample_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    # Logic for Labmentix Sample Folder
+    sample_path = "samples"
+    if os.path.exists(sample_path):
+        sample_files = [f for f in os.listdir(sample_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         if sample_files:
-            selected = st.selectbox("Select a benchmark frame:", sample_files)
-            img = Image.open(os.path.join(sample_dir, selected))
+            selected = st.selectbox("Choose a benchmark image:", sample_files)
+            img = Image.open(os.path.join(sample_path, selected))
         else:
-            st.warning("No images found in /samples folder.")
+            st.warning("Sample folder found, but it is empty.")
     else:
-        st.error("⚠️ 'samples' folder not found. Please create it in your GitHub repository.")
+        st.info("💡 To enable samples: Create a folder named 'samples' in your GitHub repo and upload images.")
 
-# --- ANALYSIS ENGINE ---
+# --- ANALYTICS ENGINE ---
 if img is not None:
-    # Processing for classification
-    img_res = img.resize((224, 224))
-    img_arr = image.img_to_array(img_res) / 255.0
-    img_arr = np.expand_dims(img_arr, axis=0)
+    # 1. Pre-process for Classification Models
+    img_resized = img.resize((224, 224))
+    img_array = image.img_to_array(img_resized) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    # Predictions
-    res_transfer = transfer.predict(img_arr)[0]
-    res_cnn = cnn.predict(img_arr)[0]
-    results_yolo = yolo(img)
-    
+    # 2. Run Predictions
+    with st.spinner('Analyzing aerial data...'):
+        res_cnn = cnn.predict(img_array, verbose=0)[0]
+        res_transfer = transfer.predict(img_array, verbose=0)[0]
+        
+        # Robust check for model output shape
+        if len(res_transfer) == 1:
+            drone_p = float(res_transfer[0])
+            bird_p = 1.0 - drone_p
+            scores = [bird_p, drone_p]
+        else:
+            scores = res_transfer
+            
+        # YOLO Detection with User Threshold
+        yolo_results = yolo(img, conf=conf_threshold, verbose=False)
+
+    # 3. Decision Logic
     classes = ['Bird', 'Drone']
-    
-    # Robust Check for Transfer Learning Output (IndexError Fix)
-    if len(res_transfer) == 1:
-        drone_prob = float(res_transfer[0])
-        bird_prob = 1.0 - drone_prob
-        transfer_scores = [bird_prob, drone_prob]
-    else:
-        transfer_scores = res_transfer
+    final_idx = np.argmax(scores)
+    final_label = classes[final_idx]
+    final_conf = np.max(scores) * 100
 
-    final_class = classes[np.argmax(transfer_scores)]
-    conf = np.max(transfer_scores) * 100
-
-    # --- RESULTS DASHBOARD ---
+    # --- TOP METRICS ---
     m1, m2, m3 = st.columns(3)
     with m1:
-        st.metric("Identification", final_class)
+        st.metric("Identification", final_label)
     with m2:
-        st.metric("System Confidence", f"{conf:.2f}%")
+        st.metric("AI Confidence", f"{final_conf:.2f}%")
     with m3:
-        status = "⚠️ THREAT" if final_class == "Drone" else "✅ CLEAR"
-        st.metric("Security Status", status)
+        if final_label == "Drone" and final_conf > 70:
+            st.error("🚨 THREAT DETECTED")
+        else:
+            st.success("✅ AIRSPACE CLEAR")
 
     st.write(" ")
 
-    # --- VISUAL LAYOUT ---
-    col_left, col_right = st.columns([1.2, 1])
-    
-    with col_left:
-        st.markdown("### 📍 Object Localization")
-        res_plot = results_yolo[0].plot()
-        res_rgb = cv2.cvtColor(res_plot, cv2.COLOR_BGR2RGB)
-        st.image(res_rgb, caption="YOLOv8 Detection Output", use_container_width=True)
+    # --- VISUALIZATION COLUMNS ---
+    col_vis, col_data = st.columns([1.5, 1])
 
-    with col_right:
-        st.markdown("### 📊 AI Probability Analysis")
-        chart_data = pd.DataFrame({
-            "Confidence": [float(transfer_scores[0]), float(transfer_scores[1])],
-            "Label": ["Bird", "Drone"]
-        }).set_index("Label")
-        st.bar_chart(chart_data)
+    with col_vis:
+        st.subheader("📍 Object Localization")
+        # Plot YOLO findings
+        res_img_bgr = yolo_results[0].plot()
+        res_img_rgb = cv2.cvtColor(res_img_bgr, cv2.COLOR_BGR2RGB)
+        st.image(res_img_rgb, caption="Real-Time Detection Output", use_container_width=True)
+
+    with col_data:
+        st.subheader("📊 Probability Breakdown")
+        chart_df = pd.DataFrame({
+            "Confidence": [float(scores[0]), float(scores[1])],
+            "Object": ["Bird", "Drone"]
+        }).set_index("Object")
+        st.bar_chart(chart_df)
         
-        # Technical Validation Table
-        st.markdown("#### Model Validation")
-        st.table(pd.DataFrame({
-            "Architecture": ["Custom CNN", "Transfer Learning"],
-            "Bird %": [f"{res_cnn[0]*100:.1f}%", f"{transfer_scores[0]*100:.1f}%"],
-            "Drone %": [f"{res_cnn[1]*100:.1f}%", f"{transfer_scores[1]*100:.1f}%"]
-        }))
+        with st.expander("Technical Model Validation"):
+            st.table(pd.DataFrame({
+                "Architecture": ["Custom CNN", "Transfer Learning"],
+                "Bird %": [f"{res_cnn[0]*100:.1f}%", f"{scores[0]*100:.1f}%"],
+                "Drone %": [f"{res_cnn[1]*100:.1f}%", f"{scores[1]*100:.1f}%"]
+            }))
 else:
-    st.info("Awaiting data input... Select an option from the Control Panel to begin.")
+    # Welcome State
+    st.info("Awaiting input. Please upload a surveillance frame or select a sample from the sidebar.")
