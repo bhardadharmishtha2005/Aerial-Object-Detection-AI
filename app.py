@@ -74,10 +74,22 @@ st.write("---")
 # --- DATA HANDLING ---
 img = None
 
-input_choice == "Manual Upload":
+if input_choice == "Manual Upload":
     uploaded_file = st.file_uploader("Drop surveillance frame here...", type=["jpg", "png", "jpeg"])
     if uploaded_file:
         img = Image.open(uploaded_file)
+else:
+    # Logic for Labmentix Sample Folder
+    sample_path = "samples"
+    if os.path.exists(sample_path):
+        sample_files = [f for f in os.listdir(sample_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        if sample_files:
+            selected = st.selectbox("Choose a benchmark image:", sample_files)
+            img = Image.open(os.path.join(sample_path, selected))
+        else:
+            st.warning("Sample folder found, but it is empty.")
+    else:
+        st.info("💡 To enable samples: Create a folder named 'samples' in your GitHub repo and upload images.")
 
 # --- ANALYTICS ENGINE ---
 if img is not None:
