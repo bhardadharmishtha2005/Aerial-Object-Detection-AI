@@ -19,7 +19,7 @@ st.markdown("""
     .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     h1 { color: #004a99; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 </style>
-""", unsafe_with_html=True)
+""", unsafe_allow_html=True)
 
 # --- MODEL LOADING ---
 @st.cache_resource
