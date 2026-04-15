@@ -1,6 +1,6 @@
-tensorflow
+tensorflow-cpu
 streamlit
-opencv-python
+opencv-python-headless
 numpy
 ultralytics
-matplotlib
+pillow
