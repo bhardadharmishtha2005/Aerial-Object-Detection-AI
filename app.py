@@ -11,12 +11,12 @@ import os
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="SkyGuard: Aerial Intelligence", 
+    page_title="Aerial Object Detection", 
     page_icon="🛡️", 
     layout="wide"
 )
 
-# --- CUSTOM CSS FOR CLEAN UI ---
+# --- CUSTOM CSS ---
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -30,16 +30,15 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- MODEL LOADING (CACHED) ---
+# --- MODEL LOADING ---
 @st.cache_resource
 def load_all_models():
     try:
-        # Loading your AI models
         cnn = load_model('best_model_custom_cnn.keras')
         transfer = load_model('best_model_transfer_learning.keras')
         yolo_m = YOLO('best.pt')
         return cnn, transfer, yolo_m
-    except Exception as e:
+    except Exception:
         return None, None, None
 
 cnn, transfer, yolo = load_all_models()
@@ -49,24 +48,19 @@ with st.sidebar:
     st.title("🛡️ SkyGuard Ops")
     st.write("---")
     
-    # System Connectivity Status
-    if cnn and yolo:
-        st.success("AI Core: Online")
-    else:
-        st.error("AI Core: Offline")
-    
     st.markdown("### 📥 Input Selection")
-    input_choice = st.radio("Source:", ["Manual Upload", "Labmentix Samples"])
+    # Renamed to Sample Dataset as requested
+    input_choice = st.radio("Source:", ["Manual Upload", "Sample Dataset"])
     
     st.write("---")
     st.markdown("### 🎯 Detection Sensitivity")
-    # This fixes your "False Bird" problem. 
-    # Slide it to 0.7 or higher for landscape photos.
-    conf_threshold = st.slider("Min Confidence %", 0.0, 1.0, 0.5, help="Increase this to remove false detections in busy backgrounds.")
+    conf_threshold = st.slider("Min Confidence %", 0.0, 1.0, 0.5)
     
     st.write("---")
+    st.caption("SkyGuard | Developed by Bharda Dharmishtha")
 
 # --- MAIN INTERFACE ---
+# Renamed from "Aerial Object Detection" to SkyGuard
 st.title("🛡️ SkyGuard: Aerial Intelligence")
 st.markdown("##### Enterprise-Grade Drone & Bird Monitoring System")
 st.write("---")
@@ -79,31 +73,32 @@ if input_choice == "Manual Upload":
     if uploaded_file:
         img = Image.open(uploaded_file)
 else:
-    # Logic for Labmentix Sample Folder
+    # Improved Sample Dataset Logic
     sample_path = "samples"
     if os.path.exists(sample_path):
         sample_files = [f for f in os.listdir(sample_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         if sample_files:
-            selected = st.selectbox("Choose a benchmark image:", sample_files)
+            selected = st.selectbox("Select Benchmark Image:", sample_files)
             img = Image.open(os.path.join(sample_path, selected))
         else:
-            st.warning("Sample folder found, but it is empty.")
+            st.info("The 'samples' folder is currently empty.")
     else:
-        st.info("💡 To enable samples: Create a folder named 'samples' in your GitHub repo and upload images.")
+        # Replaced the big red error with a helpful tip
+        st.info("💡 To use Sample Datasets, create a folder named 'samples' in your repository and upload images.")
 
 # --- ANALYTICS ENGINE ---
 if img is not None:
-    # 1. Pre-process for Classification Models
+    # Pre-processing
     img_resized = img.resize((224, 224))
     img_array = image.img_to_array(img_resized) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # 2. Run Predictions
-    with st.spinner('Analyzing aerial data...'):
+    # Predictions
+    with st.spinner('Analyzing...'):
         res_cnn = cnn.predict(img_array, verbose=0)[0]
         res_transfer = transfer.predict(img_array, verbose=0)[0]
         
-        # Robust check for model output shape
+        # Output handling
         if len(res_transfer) == 1:
             drone_p = float(res_transfer[0])
             bird_p = 1.0 - drone_p
@@ -111,10 +106,8 @@ if img is not None:
         else:
             scores = res_transfer
             
-        # YOLO Detection with User Threshold
         yolo_results = yolo(img, conf=conf_threshold, verbose=False)
 
-    # 3. Decision Logic
     classes = ['Bird', 'Drone']
     final_idx = np.argmax(scores)
     final_label = classes[final_idx]
@@ -123,41 +116,39 @@ if img is not None:
     # --- TOP METRICS ---
     m1, m2, m3 = st.columns(3)
     with m1:
-        st.metric("Identification", final_label)
+        st.metric("Target Identified", final_label)
     with m2:
-        st.metric("AI Confidence", f"{final_conf:.2f}%")
+        st.metric("System Confidence", f"{final_conf:.2f}%")
     with m3:
         if final_label == "Drone" and final_conf > 70:
             st.error("🚨 THREAT DETECTED")
         else:
-            st.success("✅ AIRSPACE CLEAR")
+            st.success("✅ CLEAR")
 
     st.write(" ")
 
-    # --- VISUALIZATION COLUMNS ---
+    # --- VISUALIZATION ---
     col_vis, col_data = st.columns([1.5, 1])
 
     with col_vis:
-        st.subheader("📍 Object Localization")
-        # Plot YOLO findings
+        st.subheader("📍 YOLOv8 Localization")
         res_img_bgr = yolo_results[0].plot()
         res_img_rgb = cv2.cvtColor(res_img_bgr, cv2.COLOR_BGR2RGB)
-        st.image(res_img_rgb, caption="Real-Time Detection Output", use_container_width=True)
+        st.image(res_img_rgb, use_container_width=True)
 
     with col_data:
-        st.subheader("📊 Probability Breakdown")
+        st.subheader("📊 Probability Analysis")
         chart_df = pd.DataFrame({
             "Confidence": [float(scores[0]), float(scores[1])],
             "Object": ["Bird", "Drone"]
         }).set_index("Object")
         st.bar_chart(chart_df)
         
-        with st.expander("Technical Model Validation"):
+        with st.expander("Technical Comparison"):
             st.table(pd.DataFrame({
-                "Architecture": ["Custom CNN", "Transfer Learning"],
+                "Model": ["Custom CNN", "Transfer Learning"],
                 "Bird %": [f"{res_cnn[0]*100:.1f}%", f"{scores[0]*100:.1f}%"],
                 "Drone %": [f"{res_cnn[1]*100:.1f}%", f"{scores[1]*100:.1f}%"]
             }))
 else:
-    # Welcome State
     st.info("Awaiting input. Please upload a surveillance frame or select a sample from the sidebar.")
