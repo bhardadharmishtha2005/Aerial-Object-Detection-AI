@@ -1,6 +1,7 @@
-tensorflow-cpu
 streamlit
+tensorflow-cpu
+ultralytics
 opencv-python-headless
 numpy
-ultralytics
-pillow
+pandas
+Pillow
