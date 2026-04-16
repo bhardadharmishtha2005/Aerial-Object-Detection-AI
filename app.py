@@ -10,7 +10,7 @@ import pandas as pd
 import os
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="SkyGuard: Aerial Intelligence", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Aerial Object Detection Intelligence", page_icon="🛡️", layout="wide")
 
 # --- CUSTOM CSS ---
 st.markdown("""<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>""", unsafe_allow_html=True)
