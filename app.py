@@ -102,18 +102,27 @@ if img is not None:
                 else:
                     st.success("✅ AIRSPACE CLEAR")
 
-            # --- VISUALS ---
+           # --- VISUALS ---
             c1, c2 = st.columns([1.5, 1])
             with c1:
                 st.subheader("📍 YOLOv8 Localization")
                 res_plotted = yolo_results[0].plot()
                 st.image(res_plotted, channels="BGR", use_container_width=True)
+          
             with c2:
                 st.subheader("📊 Probability Distribution")
+                
+                # Logic to clear the chart if the result is unwanted
+                if final_label == "Unwanted / Background":
+                    chart_scores = [0.0, 0.0]
+                else:
+                    chart_scores = [float(scores[0]), float(scores[1])]
+                    
                 chart_data = pd.DataFrame({
-                    "Confidence": [float(scores[0]), float(scores[1])], 
+                    "Confidence": chart_scores, 
                     "Object": ["Bird", "Drone"]
                 }).set_index("Object")
+                
                 st.bar_chart(chart_data)
     else:
         st.error("Critical System Failure: Model files not found.")
