@@ -3,11 +3,9 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
-from ultralytics import YOLO
+from ultralytics import YOLO # This is line 6
 from PIL import Image
-import cv2
-import pandas as pd
-import os
+import cv2 # This is line 8
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="SkyGuard: Aerial Intelligence", page_icon="🛡️", layout="wide")
