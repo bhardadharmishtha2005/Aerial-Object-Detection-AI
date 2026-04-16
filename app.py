@@ -50,7 +50,7 @@ with st.sidebar:
     
     st.markdown("### 📥 Input Selection")
     # Renamed to Sample Dataset as requested
-    input_choice = st.radio("Source:", ["Manual Upload", "Sample Dataset"])
+    input_choice = st.radio("Source:", ["Manual Upload", "samples"])
     
     st.write("---")
     st.markdown("### 🎯 Detection Sensitivity")
