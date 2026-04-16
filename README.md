@@ -1,4 +1,4 @@
-# Aerial Object Detection Intelligence 🛰️
+# Aerial Object Detection Intelligence 
 
 ##  Overview
 **Aerial Object Detection Intelligence** is a multi-modal AI dashboard designed for airspace security. It differentiates between authorized aerial activity and potential threats using a layered detection approach.
