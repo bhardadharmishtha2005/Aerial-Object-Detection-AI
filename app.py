@@ -2,16 +2,17 @@ import os
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
 
+import cv2
+from PIL import Image
+from ultralytics import YOLO
+import numpy as np
+import pandas as pd
 import streamlit as st
+
+# TensorFlow imported AFTER OpenCV/Ultralytics
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import numpy as np
-from ultralytics import YOLO
-from PIL import Image
-import cv2
-import pandas as pd
-import os
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Aerial Object Detection Intelligence", page_icon="🛡️", layout="wide")
