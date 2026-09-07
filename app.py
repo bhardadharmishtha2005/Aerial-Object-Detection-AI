@@ -1,13 +1,12 @@
 import os
+
+# Set headless environment variables before importing cv2 or YOLO
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
-os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
+os.environ["OPENCV_LOG_LEVEL"] = "OFF"
 
 import cv2
-from PIL import Image
-from ultralytics import YOLO
-import numpy as np
-import pandas as pd
 import streamlit as st
+from ultralytics import YOLO
 
 # TensorFlow imported AFTER OpenCV/Ultralytics
 import tensorflow as tf
