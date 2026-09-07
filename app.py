@@ -23,8 +23,8 @@ st.markdown("""<style>#MainMenu {visibility: hidden;} footer {visibility: hidden
 @st.cache_resource
 def load_all_models():
     try:
-        cnn = load_model('best_model_custom_cnn.keras') if os.path.exists('best_model_custom_cnn.keras') else None
-        transfer = load_model('best_model_transfer_learning.keras') if os.path.exists('best_model_transfer_learning.keras') else None
+        cnn = load_model('best_model_custom_cnn.keras', compile=False) if os.path.exists('best_model_custom_cnn.keras') else None
+        transfer = load_model('best_model_transfer_learning.keras', compile=False) if os.path.exists('best_model_transfer_learning.keras') else None
         yolo_m = YOLO('best.pt') if os.path.exists('best.pt') else None
         return cnn, transfer, yolo_m
     except Exception as e:
