@@ -1,9 +1,7 @@
-opencv-python-headless
 streamlit
-tensorflow-cpu
+opencv-python-headless
 ultralytics
-torch
-torchvision
+tensorflow-cpu
 pillow
 numpy
 pandas
