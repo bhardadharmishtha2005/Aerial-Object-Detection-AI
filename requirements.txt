@@ -1,10 +1,9 @@
-streamlit
-tensorflow-cpu==2.18.0
-ultralytics==8.2.0
-torch==2.2.2
-torchvision==0.17.2
 opencv-python-headless
-pyarrow==15.0.0
+streamlit
+tensorflow-cpu
+ultralytics
+torch
+torchvision
 pillow
-numpy==1.26.4
+numpy
 pandas
