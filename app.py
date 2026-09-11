@@ -7,6 +7,9 @@ os.environ["OPENCV_LOG_LEVEL"] = "OFF"
 import cv2
 import streamlit as st
 from PIL import Image
+import numpy as np
+import pandas as pd
+
 from ultralytics import YOLO
 
 # TensorFlow imported AFTER OpenCV/Ultralytics
