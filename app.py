@@ -1,18 +1,11 @@
 import os
 
-# Set headless environment variables before importing cv2 or YOLO
-os.environ["QT_QPA_PLATFORM"] = "offscreen"
-os.environ["OPENCV_LOG_LEVEL"] = "OFF"
-
-import cv2
 import streamlit as st
 from PIL import Image
 import numpy as np
 import pandas as pd
-
 from ultralytics import YOLO
 
-# TensorFlow imported AFTER OpenCV/Ultralytics
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
