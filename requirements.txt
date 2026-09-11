@@ -1,7 +1,7 @@
 streamlit
 opencv-python-headless
-ultralytics
-tensorflow-cpu
-pillow
 numpy
-pandas
+pillow
+ultralytics
+torch
+torchvision
