@@ -19,13 +19,22 @@ st.markdown("""<style>#MainMenu {visibility: hidden;} footer {visibility: hidden
 # --- MODEL LOADING ---
 @st.cache_resource
 def load_all_models():
-    try:
-        cnn = load_model('best_model_custom_cnn.keras', compile=False) if os.path.exists('best_model_custom_cnn.keras') else None
-        transfer = load_model('best_model_transfer_learning.keras', compile=False) if os.path.exists('best_model_transfer_learning.keras') else None
-        yolo_m = YOLO('best.pt') if os.path.exists('best.pt') else None
-        return cnn, transfer, yolo_m
-    except Exception as e:
-        return None, None, None
+    transfer = (
+    load_model(
+        'best_model_transfer_learning.keras',
+        compile=False
+    )
+    if os.path.exists('best_model_transfer_learning.keras')
+    else None
+)
+
+yolo_m = (
+    YOLO('best.pt')
+    if os.path.exists('best.pt')
+    else None
+)
+
+return transfer, yolo_m
 
 cnn, transfer, yolo = load_all_models()
 
@@ -61,7 +70,7 @@ else:
 
 # --- ANALYTICS ENGINE ---
 if img is not None:
-    if cnn and transfer and yolo:
+    if transfer and yolo:
         img_resized = img.resize((224, 224))
         img_array = image.img_to_array(img_resized) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
